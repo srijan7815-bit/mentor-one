@@ -1,56 +1,69 @@
 "use client";
 
-import { Brain, Clock, Activity } from "lucide-react";
+import { Brain, Clock } from "lucide-react";
+import { Message } from "ai";
 
-export function RightPanel() {
+export function RightPanel({ messages, isLoading }: { messages: Message[], isLoading: boolean }) {
+  // Extract all thoughts from assistant messages
+  const thoughts = messages
+    .filter(m => m.role === 'assistant')
+    .map(m => {
+      const match = m.content.match(/<thought>([\s\S]*?)(?:<\/thought>|$)/);
+      return match ? match[1].trim() : null;
+    })
+    .filter(Boolean);
+
+  const latestThought = thoughts.length > 0 ? thoughts[thoughts.length - 1] : "Awaiting student input to begin cognitive processing...";
+
   return (
-    <div className="flex flex-col h-full bg-slate-800/50 border-l border-slate-700 p-4 space-y-6 overflow-y-auto">
+    <div className="flex flex-col h-full p-5 space-y-8 overflow-y-auto">
       
-      {/* Mentor's Mind (Internal Monologue) */}
-      <section className="space-y-3">
-        <h2 className="flex items-center text-sm font-semibold text-amber-500/80 uppercase tracking-wider">
-          <Brain className="w-4 h-4 mr-2" />
-          Mentor&apos;s Mind
-        </h2>
-        <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 text-xs font-mono text-slate-500 leading-relaxed">
-          <p>{`> Analyzing student input...`}</p>
-          <p>{`> Detected slight hesitation on "softmax".`}</p>
-          <p>{`> Adjusting plan: Introduce a simpler analogy before proceeding to code implementation.`}</p>
-          <p className="animate-pulse mt-2">{`> Generating response...`}</p>
+      {/* Active Session Info */}
+      <div className="flex items-center justify-between pt-1">
+        <div className="flex items-center gap-2">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          </span>
+          <span className="text-xs font-medium text-zinc-400">Nemotron-Ultra Online</span>
         </div>
-      </section>
+      </div>
 
-      {/* Pomodoro / Focus Timer */}
-      <section className="space-y-3">
-        <h2 className="flex items-center text-sm font-semibold text-slate-400 uppercase tracking-wider">
-          <Clock className="w-4 h-4 mr-2" />
-          Focus Session
+      {/* Focus Timer */}
+      <section className="space-y-4">
+        <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+          <Clock className="w-3.5 h-3.5" /> Session
         </h2>
-        <div className="bg-slate-800 rounded-xl p-6 flex flex-col items-center justify-center">
-          <div className="text-4xl font-light text-amber-400 tracking-widest mb-2">
+        <div className="bg-zinc-900/50 rounded-xl p-6 border border-zinc-800/50 flex flex-col items-center justify-center relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-zinc-800/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div className="text-4xl font-light text-zinc-100 tracking-wider mb-2 font-mono tabular-nums">
             42:15
           </div>
-          <span className="text-xs text-slate-400 uppercase tracking-widest">Deep Work</span>
+          <span className="text-xs text-zinc-500 uppercase tracking-widest">Deep Work Block</span>
         </div>
       </section>
 
-      {/* Timeline / Continuous Memory */}
-      <section className="space-y-3 flex-1">
-        <h2 className="flex items-center text-sm font-semibold text-slate-400 uppercase tracking-wider">
-          <Activity className="w-4 h-4 mr-2" />
-          Session Timeline
+      {/* Internal Monologue (Mentor's Mind) */}
+      <section className="space-y-4 flex-1 flex flex-col min-h-0">
+        <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+          <Brain className="w-3.5 h-3.5" /> Mentor&apos;s Mind
         </h2>
-        <div className="relative pl-4 border-l-2 border-slate-700 space-y-4 text-sm mt-4">
-          <div className="relative">
-            <span className="absolute -left-[21px] w-3 h-3 bg-slate-700 rounded-full"></span>
-            <p className="text-slate-300">Session Started</p>
-            <span className="text-xs text-slate-500">10:00 AM</span>
+        <div className="flex-1 bg-zinc-900/30 rounded-xl border border-zinc-800/50 p-4 overflow-y-auto flex flex-col font-mono text-xs">
+          <div className="flex items-center gap-2 mb-4 pb-3 border-b border-zinc-800/50">
+            <div className="w-2 h-2 rounded-full bg-zinc-700"></div>
+            <span className="text-zinc-500 uppercase tracking-wider">Cognitive Trace</span>
           </div>
-          <div className="relative">
-            <span className="absolute -left-[21px] w-3 h-3 bg-amber-400 rounded-full shadow-[0_0_10px_rgba(251,191,36,0.5)]"></span>
-            <p className="text-slate-300">Reviewed Attention Mechanism</p>
-            <span className="text-xs text-slate-500">10:15 AM</span>
+          
+          <div className="space-y-4 text-zinc-400 leading-relaxed whitespace-pre-wrap">
+            {latestThought}
           </div>
+
+          {isLoading && (
+            <div className="mt-4 flex items-center gap-2 text-zinc-500">
+              <Brain className="w-3.5 h-3.5 animate-pulse" />
+              <span className="animate-pulse">Synthesizing response...</span>
+            </div>
+          )}
         </div>
       </section>
 

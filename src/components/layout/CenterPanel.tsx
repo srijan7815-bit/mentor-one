@@ -1,89 +1,137 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useEffect } from "react";
+import { Message } from "ai";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { Mic, ArrowUpSquare, Square } from "lucide-react";
 import { VoiceOrb } from "../mentor/VoiceOrb";
-import { Mic, MicOff, Settings, Book } from "lucide-react";
 
-export function CenterPanel() {
-  const [isListening, setIsListening] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  
-  const toggleListening = () => setIsListening(!isListening);
-  
-  // Fake mentor speaking trigger for demo purposes
-  const simulateMentor = () => {
-    setIsSpeaking(true);
-    setTimeout(() => setIsSpeaking(false), 5000);
+export function CenterPanel({ 
+  messages, 
+  input, 
+  handleInputChange, 
+  handleSubmit, 
+  isLoading,
+  stop
+}: { 
+  messages: Message[], 
+  input: string, 
+  handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void, 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  handleSubmit: any,
+  isLoading: boolean,
+  stop: () => void
+}) {
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Strip <thought> tags from display
+  const stripThoughts = (content: string) => {
+    return content.replace(/<thought>[\s\S]*?(?:<\/thought>|$)/g, '').trim();
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-900 relative">
+    <div className="flex flex-col h-full relative">
       
-      {/* Top Bar */}
-      <div className="flex items-center justify-between p-4 border-b border-slate-800">
-        <div className="flex items-center space-x-2 text-amber-500">
-          <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-          <span className="text-sm font-medium tracking-wider uppercase">Nemotron-Ultra Active</span>
+      {/* Voice Orb Area (Top Center) */}
+      <div className="pt-8 pb-4 flex justify-center shrink-0">
+        <div className="scale-75 origin-top">
+          <VoiceOrb isListening={false} isSpeaking={isLoading} />
         </div>
-        <button className="text-slate-400 hover:text-slate-200 transition-colors">
-          <Settings className="w-5 h-5" />
-        </button>
       </div>
 
-      {/* Main Voice Interaction Area */}
-      <div className="flex-1 flex flex-col items-center justify-center p-8">
-        <VoiceOrb isListening={isListening} isSpeaking={isSpeaking} />
-        
-        {/* Live Transcripts */}
-        <div className="w-full max-w-2xl mt-12 space-y-6">
-          <div className="bg-slate-800/50 p-6 rounded-2xl rounded-tl-sm border border-slate-700/50">
-            <p className="text-slate-300 text-lg leading-relaxed">
-              So, how does the query vector actually interact with the key vector in the attention formula?
-            </p>
+      {/* Main Chat Area */}
+      <div className="flex-1 overflow-y-auto px-4 md:px-12 lg:px-24 pb-32">
+        {messages.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-50">
+            <p className="text-zinc-400 text-lg">Hello, Alex.</p>
+            <p className="text-zinc-500 text-sm max-w-sm">I have reviewed your progress. What area of our curriculum would you like to focus on today?</p>
           </div>
-          
-          <div className="bg-amber-900/10 p-6 rounded-2xl rounded-tr-sm border border-amber-500/20 ml-12">
-            <p className="text-amber-100/90 text-lg leading-relaxed">
-              Great question. Think of the Query as what you&apos;re looking for, and the Key as what the data holds. We take the dot product of the two. If they align well, the score is higher, meaning we should pay more attention to that specific Value.
-            </p>
+        ) : (
+          <div className="space-y-8 max-w-3xl mx-auto w-full">
+            {messages.map((m) => {
+              const displayContent = stripThoughts(m.content);
+              if (!displayContent) return null; // Don't render empty messages if it's just a thought
+
+              return (
+                <div 
+                  key={m.id} 
+                  className={`flex w-full ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div 
+                    className={`max-w-[85%] rounded-2xl p-5 ${
+                      m.role === 'user' 
+                        ? 'bg-zinc-800 text-zinc-100 rounded-tr-sm' 
+                        : 'bg-transparent text-zinc-300'
+                    }`}
+                  >
+                    {m.role === 'assistant' && (
+                      <div className="text-xs font-semibold text-zinc-500 mb-2 uppercase tracking-widest">
+                        Mentor
+                      </div>
+                    )}
+                    <div className={`prose prose-invert max-w-none ${m.role === 'user' ? 'prose-p:leading-relaxed' : 'prose-p:leading-relaxed prose-pre:bg-zinc-900 prose-pre:border prose-pre:border-zinc-800'}`}>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {displayContent}
+                      </ReactMarkdown>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            <div ref={bottomRef} />
+          </div>
+        )}
+      </div>
+
+      {/* Input Area */}
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-zinc-950 via-zinc-950/90 to-transparent pt-10 pb-8 px-4 md:px-12 lg:px-24">
+        <div className="max-w-3xl mx-auto w-full relative">
+          <form 
+            onSubmit={handleSubmit}
+            className="relative flex items-center bg-zinc-900 border border-zinc-800/50 rounded-2xl shadow-2xl focus-within:ring-2 focus-within:ring-zinc-700 transition-all overflow-hidden"
+          >
+            <button 
+              type="button"
+              className="p-4 text-zinc-500 hover:text-zinc-300 transition-colors"
+            >
+              <Mic className="w-5 h-5" />
+            </button>
+            <input
+              value={input}
+              onChange={handleInputChange}
+              placeholder="Ask your mentor..."
+              className="flex-1 bg-transparent border-none outline-none text-zinc-100 placeholder:text-zinc-600 py-4 px-2"
+            />
+            <div className="p-2">
+              {isLoading ? (
+                <button 
+                  type="button"
+                  onClick={stop}
+                  className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-zinc-300 transition-colors"
+                >
+                  <Square className="w-5 h-5 fill-current" />
+                </button>
+              ) : (
+                <button 
+                  type="submit"
+                  disabled={!input.trim()}
+                  className="p-2 bg-zinc-100 hover:bg-white text-zinc-900 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ArrowUpSquare className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+          </form>
+          <div className="text-center mt-3">
+            <span className="text-[10px] text-zinc-600 uppercase tracking-widest font-medium">Nemotron-Ultra 253B Engine</span>
           </div>
         </div>
-      </div>
-
-      {/* Resource Viewer Panel (Bottom Collapsible) */}
-      <div className="h-64 bg-slate-950 border-t border-slate-800 p-4 flex flex-col">
-        <div className="flex items-center text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
-          <Book className="w-4 h-4 mr-2" />
-          Active Resource: Attention Is All You Need (Section 3.2.1)
-        </div>
-        <div className="flex-1 bg-slate-900 rounded-lg border border-slate-800 p-6 overflow-y-auto font-serif text-slate-300">
-          <p className="text-xl mb-4">Scaled Dot-Product Attention</p>
-          <p className="leading-relaxed">
-            We call our particular attention &quot;Scaled Dot-Product Attention&quot;. The input consists of queries and keys of dimension 
-            d_k, and values of dimension d_v. We compute the dot products of the query with all keys, divide each by sqrt(d_k), 
-            and apply a softmax function to obtain the weights on the values.
-          </p>
-        </div>
-      </div>
-
-      {/* Controls */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4">
-        <button 
-          onClick={toggleListening}
-          className={`p-4 rounded-full shadow-lg transition-all ${
-            isListening 
-              ? 'bg-red-500 hover:bg-red-600 shadow-red-500/20' 
-              : 'bg-slate-700 hover:bg-slate-600 shadow-black/50'
-          }`}
-        >
-          {isListening ? <MicOff className="w-6 h-6 text-white" /> : <Mic className="w-6 h-6 text-white" />}
-        </button>
-        <button 
-          onClick={simulateMentor}
-          className="px-4 py-2 bg-slate-800 text-xs text-slate-400 rounded-full hover:bg-slate-700"
-        >
-          Simulate Mentor Voice
-        </button>
       </div>
 
     </div>

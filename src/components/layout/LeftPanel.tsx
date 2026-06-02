@@ -1,64 +1,84 @@
 "use client";
 
-import { User, Map, BookOpen } from "lucide-react";
+import { User, Map, Code2, Database, BrainCircuit, Activity } from "lucide-react";
 
 export function LeftPanel() {
   return (
-    <div className="flex flex-col h-full bg-slate-800/50 border-r border-slate-700 p-4 space-y-6 overflow-y-auto">
+    <div className="flex flex-col h-full p-5 space-y-8 overflow-y-auto">
       
+      {/* Brand Header */}
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center">
+          <BrainCircuit className="w-5 h-5 text-zinc-950" />
+        </div>
+        <h1 className="font-semibold tracking-tight text-zinc-100">MENTOR-ONE</h1>
+      </div>
+
       {/* Student Profile */}
-      <section className="space-y-3">
-        <h2 className="flex items-center text-sm font-semibold text-slate-400 uppercase tracking-wider">
-          <User className="w-4 h-4 mr-2" />
-          Student Profile
+      <section className="space-y-4">
+        <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+          <User className="w-3.5 h-3.5" /> Identity Core
         </h2>
-        <div className="bg-slate-800 rounded-xl p-4 space-y-2 text-sm">
-          <p><span className="text-slate-400">Name:</span> Alex</p>
-          <p><span className="text-slate-400">Focus:</span> Advanced AI Systems</p>
-          <p><span className="text-slate-400">Energy:</span> High</p>
+        <div className="bg-zinc-900/50 rounded-xl p-4 space-y-3 border border-zinc-800/50">
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-zinc-400">Name</span>
+            <span className="text-sm font-medium text-zinc-200">Alex</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-zinc-400">Focus</span>
+            <span className="text-sm font-medium text-zinc-200">AI Architecture</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-zinc-400">State</span>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span className="text-sm font-medium text-zinc-200">Deep Work</span>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Roadmap Progress */}
-      <section className="space-y-3">
-        <h2 className="flex items-center text-sm font-semibold text-slate-400 uppercase tracking-wider">
-          <Map className="w-4 h-4 mr-2" />
-          Roadmap
+      {/* Curriculum Roadmap */}
+      <section className="space-y-4">
+        <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+          <Map className="w-3.5 h-3.5" /> Curriculum
         </h2>
-        <div className="bg-slate-800 rounded-xl p-4 text-sm">
-          <div className="flex justify-between mb-2">
-            <span>Phase 3: Deep Learning</span>
-            <span className="text-amber-400">45%</span>
+        <div className="bg-zinc-900/50 rounded-xl p-4 border border-zinc-800/50">
+          <div className="flex justify-between items-end mb-3">
+            <div>
+              <p className="text-xs text-zinc-400 mb-1">Current Module</p>
+              <p className="text-sm font-medium text-zinc-200">Large Language Models</p>
+            </div>
+            <span className="text-xs font-mono text-zinc-500">68%</span>
           </div>
-          <div className="w-full bg-slate-700 rounded-full h-2.5">
-            <div className="bg-amber-400 h-2.5 rounded-full" style={{ width: '45%' }}></div>
+          
+          <div className="w-full bg-zinc-800 rounded-full h-1.5 mb-5 overflow-hidden">
+            <div className="bg-zinc-300 h-1.5 rounded-full w-[68%] relative">
+              <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+            </div>
           </div>
-          <ul className="mt-4 space-y-2 text-slate-300">
-            <li className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-green-400"></span>
-              Backpropagation
+          
+          <ul className="space-y-3">
+            <li className="flex items-start gap-3">
+              <Database className="w-4 h-4 text-zinc-600 mt-0.5" />
+              <div>
+                <p className="text-sm text-zinc-500 line-through">Vector Embeddings</p>
+              </div>
             </li>
-            <li className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-              Transformers (Current)
+            <li className="flex items-start gap-3 relative">
+              <Code2 className="w-4 h-4 text-zinc-200 mt-0.5" />
+              <div>
+                <p className="text-sm text-zinc-200 font-medium">Attention Mechanisms</p>
+                <p className="text-xs text-zinc-500 mt-0.5">Current focus area</p>
+              </div>
             </li>
-            <li className="flex items-center gap-2 text-slate-500">
-              <span className="w-2 h-2 rounded-full bg-slate-600"></span>
-              RLHF
+            <li className="flex items-start gap-3">
+              <Activity className="w-4 h-4 text-zinc-600 mt-0.5" />
+              <div>
+                <p className="text-sm text-zinc-600">Model Fine-Tuning</p>
+              </div>
             </li>
           </ul>
-        </div>
-      </section>
-
-      {/* Mentor's Private Notes */}
-      <section className="space-y-3 flex-1">
-        <h2 className="flex items-center text-sm font-semibold text-slate-400 uppercase tracking-wider">
-          <BookOpen className="w-4 h-4 mr-2" />
-          Mentor&apos;s Private Notes
-        </h2>
-        <div className="bg-slate-800/80 border border-slate-700 rounded-xl p-4 text-sm font-mono text-slate-400 h-full max-h-64 overflow-y-auto">
-          <p className="mb-2">Observed user struggling with QKV attention math last session. Need to break it down visually today.</p>
-          <p className="mb-2">User seems rested. Pushing for a 90-minute deep work block.</p>
         </div>
       </section>
 
