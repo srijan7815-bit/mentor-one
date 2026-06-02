@@ -1,11 +1,21 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { Message } from "ai";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Mic, ArrowUpSquare, Square } from "lucide-react";
+import { Mic, MicOff, ArrowUpSquare, Square } from "lucide-react";
 import { VoiceOrb } from "../mentor/VoiceOrb";
+
+// Type definition for SpeechRecognition
+declare global {
+  interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    SpeechRecognition: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    webkitSpeechRecognition: any;
+  }
+}
 
 export function CenterPanel({ 
   messages, 
@@ -13,7 +23,8 @@ export function CenterPanel({
   handleInputChange, 
   handleSubmit, 
   isLoading,
-  stop
+  stop,
+  append
 }: { 
   messages: Message[], 
   input: string, 
@@ -21,14 +32,66 @@ export function CenterPanel({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleSubmit: any,
   isLoading: boolean,
-  stop: () => void
+  stop: () => void,
+  append: (message: { role: 'user', content: string }) => void
 }) {
   const bottomRef = useRef<HTMLDivElement>(null);
+  const [isListening, setIsListening] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null);
 
   // Auto-scroll to bottom
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Speech Recognition Setup
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = "en-US";
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        recognition.onresult = (event: any) => {
+          const transcript = event.results[0][0].transcript;
+          if (transcript) {
+            append({ role: "user", content: transcript });
+          }
+          setIsListening(false);
+        };
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        recognition.onerror = (event: any) => {
+          console.error("Speech recognition error:", event.error);
+          setIsListening(false);
+        };
+
+        recognition.onend = () => {
+          setIsListening(false);
+        };
+
+        recognitionRef.current = recognition;
+      }
+    }
+  }, [append]);
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    } else {
+      // Stop any ongoing mentor speech when user starts talking
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      recognitionRef.current?.start();
+      setIsListening(true);
+    }
+  };
 
   // Strip <thought> tags from display
   const stripThoughts = (content: string) => {
@@ -41,16 +104,22 @@ export function CenterPanel({
       {/* Voice Orb Area (Top Center) */}
       <div className="pt-8 pb-4 flex justify-center shrink-0">
         <div className="scale-75 origin-top">
-          <VoiceOrb isListening={false} isSpeaking={isLoading} />
+          <VoiceOrb isListening={isListening} isSpeaking={isLoading} />
         </div>
       </div>
 
       {/* Main Chat Area */}
       <div className="flex-1 overflow-y-auto px-4 md:px-12 lg:px-24 pb-32">
         {messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-50">
-            <p className="text-zinc-400 text-lg">Hello, Alex.</p>
-            <p className="text-zinc-500 text-sm max-w-sm">I have reviewed your progress. What area of our curriculum would you like to focus on today?</p>
+          <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-100">
+            <p className="text-zinc-300 text-2xl font-light tracking-wide">MENTOR-ONE INITIALIZED</p>
+            <p className="text-zinc-500 text-sm max-w-sm mb-6">Your conscious AI life-mentor is ready.</p>
+            <button
+              onClick={() => append({ role: 'user', content: 'Hello! I am a new student. Please start my onboarding interview.' })}
+              className="px-6 py-3 bg-zinc-100 hover:bg-white text-zinc-950 font-medium rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]"
+            >
+              Begin Session
+            </button>
           </div>
         ) : (
           <div className="space-y-8 max-w-3xl mx-auto w-full">
@@ -98,9 +167,12 @@ export function CenterPanel({
           >
             <button 
               type="button"
-              className="p-4 text-zinc-500 hover:text-zinc-300 transition-colors"
+              onClick={toggleListening}
+              className={`p-4 transition-colors ${
+                isListening ? 'text-red-500 hover:text-red-400' : 'text-zinc-500 hover:text-zinc-300'
+              }`}
             >
-              <Mic className="w-5 h-5" />
+              {isListening ? <MicOff className="w-5 h-5 animate-pulse" /> : <Mic className="w-5 h-5" />}
             </button>
             <input
               value={input}

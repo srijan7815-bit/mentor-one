@@ -6,8 +6,26 @@ import { CenterPanel } from "@/components/layout/CenterPanel";
 import { RightPanel } from "@/components/layout/RightPanel";
 
 export default function Home() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading, stop } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, isLoading, stop, append } = useChat({
     api: '/api/chat',
+    onFinish: (message) => {
+      // Basic Text-To-Speech (TTS) integration
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        // Strip <thought> tags
+        const textToSpeak = message.content.replace(/<thought>[\s\S]*?(?:<\/thought>|$)/g, '').trim();
+        if (textToSpeak) {
+          const utterance = new SpeechSynthesisUtterance(textToSpeak);
+          
+          const voices = window.speechSynthesis.getVoices();
+          const preferredVoice = voices.find(v => v.name.includes('Google UK English Male') || v.name.includes('Daniel') || v.lang === 'en-GB' || v.lang === 'en-US');
+          if (preferredVoice) utterance.voice = preferredVoice;
+          
+          utterance.rate = 1.0;
+          utterance.pitch = 0.95;
+          window.speechSynthesis.speak(utterance);
+        }
+      }
+    }
   });
 
   return (
@@ -24,6 +42,7 @@ export default function Home() {
           handleSubmit={handleSubmit} 
           isLoading={isLoading}
           stop={stop}
+          append={append}
         />
       </div>
       

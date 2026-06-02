@@ -1,9 +1,9 @@
 export const AI = {
   baseURL: "https://integrate.api.nvidia.com/v1",
-  apiKey: process.env.NVIDIA_API_KEY ?? "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",
+  apiKey: process.env.NVIDIA_API_KEY ?? "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",
   models: {
-    brain:     "nvidia/llama-3.1-nemotron-ultra-253b-v1",
-    fast:      "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+    brain:     "meta/llama-3.3-70b-instruct",
+    fast:      "meta/llama-3.1-8b-instruct",
     embed:     "nvidia/llama-3.2-nv-embedqa-1b-v2",
     rerank:    "nvidia/llama-3.2-nv-rerankqa-1b-v2",
   },
